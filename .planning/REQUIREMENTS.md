@@ -140,15 +140,15 @@ Mapeamento de requisitos para fases e planos (será preenchido durante criação
 
 | Requirement | Phase | Plan | Status |
 |-------------|-------|------|--------|
-| REQ-013 | TBD | TBD | Pending |
-| REQ-015 | TBD | TBD | Pending |
-| REQ-016 | TBD | TBD | Pending |
-| REQ-017 | TBD | TBD | Pending |
-| REQ-018 | TBD | TBD | Pending |
-| REQ-019 | TBD | TBD | Pending |
-| REQ-020 | TBD | TBD | Pending |
-| REQ-021 | TBD | TBD | Pending |
-| REQ-022 | TBD | TBD | Pending |
+| REQ-013 | 1 - Reliability Core | TBD | Pending |
+| REQ-021 | 1 - Reliability Core | TBD | Pending |
+| REQ-015 | 2 - Desktop App UX | TBD | Pending |
+| REQ-016 | 2 - Desktop App UX | TBD | Pending |
+| REQ-017 | 2 - Desktop App UX | TBD | Pending |
+| REQ-019 | 3 - API Security | TBD | Pending |
+| REQ-018 | 4 - Operations | TBD | Pending |
+| REQ-020 | 4 - Operations | TBD | Pending |
+| REQ-022 | 5 - Polish | TBD | Pending |
 
 ### v2 Requirements (Backlog)
 

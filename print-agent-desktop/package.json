@@ -1,0 +1,64 @@
+{
+  "name": "cacimbo-print-agent-desktop",
+  "version": "1.0.0",
+  "description": "Cacimbo Print Agent - Aplicação Desktop para Windows",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64",
+    "build:dir": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64 --dir",
+    "package": "electron-packager . \"Cacimbo Print Agent\" --platform=win32 --arch=x64 --out=dist --overwrite --asar",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "author": "Cacimbo Print",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0",
+    "node-thermal-printer": "^4.4.0",
+    "pdf-to-printer": "^5.7.0",
+    "puppeteer-core": "^24.40.0",
+    "winston": "^3.14.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
+    "electron-packager": "^17.1.2",
+    "jest": "^29.7.0"
+  },
+  "build": {
+    "appId": "com.cacimboprint.agent",
+    "productName": "Cacimbo Print Agent",
+    "win": {
+      "target": "nsis",
+      "sign": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cacimbo Print Agent"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "agent/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build",
+        "to": "build",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}

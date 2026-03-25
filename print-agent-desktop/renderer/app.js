@@ -1,4 +1,5 @@
 let agentRunning = false;
+let jobsProcessed = 0;
 
 const elements = {
   statusDot: document.getElementById('statusDot'),
@@ -12,6 +13,52 @@ const elements = {
   logs: document.getElementById('logs'),
   notification: document.getElementById('notification'),
 };
+
+// Navigation
+function initNavigation() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.content-section');
+  const pageTitle = document.getElementById('pageTitle');
+  
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetSection = item.dataset.section;
+      
+      // Update active nav item
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+      
+      // Update active section
+      sections.forEach(section => section.classList.remove('active'));
+      document.getElementById(`${targetSection}-section`).classList.add('active');
+      
+      // Update page title
+      const titles = {
+        dashboard: 'Dashboard',
+        config: 'Configuração',
+        logs: 'Logs'
+      };
+      pageTitle.textContent = titles[targetSection] || 'Dashboard';
+    });
+  });
+}
+
+// Update Dashboard
+function updateDashboard(config) {
+  if (!config) return;
+  
+  document.getElementById('dashPrinterName').textContent = config.PRINTER_NAME || 'Não configurada';
+  document.getElementById('dashApiUrl').textContent = config.API_URL || 'Não configurada';
+  document.getElementById('dashPrinterUuid').textContent = config.PRINTER_IDENTIFIER || 'Não registrada';
+  document.getElementById('dashPrinterType').textContent = config.PRINTER_TYPE ? 
+    { kitchen: 'Cozinha', bar: 'Bar', receipt: 'Recibo' }[config.PRINTER_TYPE] : '-';
+  
+  const pollingInterval = config.POLLING_INTERVAL || '3000';
+  document.getElementById('dashPollingInterval').textContent = `${parseInt(pollingInterval) / 1000}s`;
+  
+  document.getElementById('dashJobsCount').textContent = jobsProcessed;
+}
 
 async function loadConfig() {
   try {
@@ -27,6 +74,9 @@ async function loadConfig() {
     document.getElementById('pdfFormat').value = config.PDF_PAGE_FORMAT || 'A4';
     document.getElementById('pdfOrientation').value = config.PDF_ORIENTATION || 'portrait';
     document.getElementById('pdfMargin').value = config.PDF_MARGIN || '10mm';
+    
+    // Update dashboard
+    updateDashboard(config);
     
     console.log('Printer Identifier set to:', document.getElementById('printerIdentifier').value);
   } catch (error) {
@@ -54,6 +104,7 @@ async function saveConfig(event) {
     
     if (result.success) {
       showNotification('Configuração salva com sucesso!', 'success');
+      updateDashboard(config);
     } else {
       showNotification('Erro ao salvar configuração: ' + result.error, 'error');
     }
@@ -228,20 +279,24 @@ function updateCircuitBreakerStatus(state) {
   
   // Update badge based on state
   if (state.state === 'CLOSED') {
-    badge.textContent = '🟢 API Online';
-    badge.className = 'badge badge-success';
+    badge.innerHTML = '<span class="api-badge-icon">🟢</span><span class="api-badge-text">API Online</span>';
+    badge.className = 'api-badge badge-success';
     details.textContent = state.failureCount > 0 ? `${state.failureCount} falhas` : '';
   } else if (state.state === 'OPEN') {
-    badge.textContent = '🔴 API Offline';
-    badge.className = 'badge badge-error';
+    badge.innerHTML = '<span class="api-badge-icon">🔴</span><span class="api-badge-text">API Offline</span>';
+    badge.className = 'api-badge badge-error';
     details.textContent = `Reconectando em ${state.secondsUntilRetry}s`;
   } else if (state.state === 'HALF_OPEN') {
-    badge.textContent = '🟡 Testando Conexão...';
-    badge.className = 'badge badge-warning';
+    badge.innerHTML = '<span class="api-badge-icon">🟡</span><span class="api-badge-text">Testando...</span>';
+    badge.className = 'api-badge badge-warning';
     details.textContent = 'Verificando API';
   }
 }
 
+// Initialize navigation
+initNavigation();
+
+// Load initial config
 loadConfig();
 
 window.electronAPI.getAgentStatus().then(updateAgentStatus);

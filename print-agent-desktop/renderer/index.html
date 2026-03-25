@@ -3,117 +3,287 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cacimbo Print Agent - Configuração</title>
+  <title>Cacimbo Print Agent</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🖨️ Cacimbo Print Agent</h1>
-      <p class="subtitle">Configure e gerencie o agente de impressão</p>
-    </header>
-
-    <div class="status-bar">
-      <div class="status-indicator">
-        <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">Parado</span>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+          <path d="M6 14h12v8H6z"/>
+        </svg>
+        <div class="logo-text">
+          <span class="logo-title">Cacimbo</span>
+          <span class="logo-subtitle">Print Agent</span>
+        </div>
       </div>
-      <div class="circuit-breaker-status">
-        <span class="badge" id="circuitBreakerBadge">⚪ API Status</span>
-        <small id="circuitBreakerDetails"></small>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-section="config">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+          </svg>
+          <span>Configuração</span>
+        </a>
+        <a href="#" class="nav-item" data-section="logs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <path d="M14 2v6h6M16 13H8m8 4H8m8 4H8"/>
+          </svg>
+          <span>Logs</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-card">
+          <div class="status-header">
+            <span class="status-label">Status do Agent</span>
+            <span class="status-dot" id="statusDot"></span>
+          </div>
+          <div class="status-text" id="statusText">Parado</div>
+        </div>
+        
+        <div class="api-status-card">
+          <div class="api-status-header">
+            <span class="api-status-label">Conexão API</span>
+          </div>
+          <div class="api-badge" id="circuitBreakerBadge">
+            <span class="api-badge-icon">⚪</span>
+            <span class="api-badge-text">Aguardando</span>
+          </div>
+          <div class="api-details" id="circuitBreakerDetails"></div>
+        </div>
       </div>
-      <div class="actions">
-        <button id="startBtn" class="btn btn-success">▶ Iniciar</button>
-        <button id="stopBtn" class="btn btn-danger" disabled>⏹ Parar</button>
+    </aside>
+
+    <main class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <button id="startBtn" class="btn btn-success">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <span>Iniciar</span>
+          </button>
+          <button id="stopBtn" class="btn btn-danger" disabled>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+            <span>Parar</span>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="card">
-      <h2>⚙️ Configuração</h2>
-      
-      <form id="configForm">
-        <div class="form-group">
-          <label for="apiUrl">URL da API</label>
-          <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000/api" required>
-          <small>Endereço do servidor Laravel</small>
-        </div>
+      <div class="content-sections">
+        <section id="dashboard-section" class="content-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                  <path d="M6 14h12v8H6z"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Impressora</div>
+                <div class="stat-value" id="dashPrinterName">Não configurada</div>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="printerName">Nome da Impressora</label>
-          <input type="text" id="printerName" placeholder="Ex: Cozinha Principal">
-          <small>Nome descritivo para identificar a impressora</small>
-        </div>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Jobs Processados</div>
+                <div class="stat-value" id="dashJobsCount">0</div>
+              </div>
+            </div>
 
-        <div class="form-group">
-          <label for="printerIdentifier">UUID da Impressora</label>
-          <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <input type="text" id="printerIdentifier" placeholder="Clique em 'Registrar Impressora' para gerar" readonly style="flex: 1;">
-            <button type="button" id="registerBtn" class="btn btn-primary" style="white-space: nowrap;">📝 Registrar Impressora</button>
-          </div>
-          <small>UUID será gerado automaticamente ao registrar a impressora no sistema</small>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="printerType">Tipo</label>
-            <select id="printerType">
-              <option value="kitchen">Cozinha</option>
-              <option value="bar">Bar</option>
-              <option value="receipt">Recibo</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="pollingInterval">Intervalo (ms)</label>
-            <input type="number" id="pollingInterval" value="3000" min="1000" step="1000">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="printerInterface">Interface da Impressora</label>
-          <input type="text" id="printerInterface" placeholder="\\COMPUTADOR\IMPRESSORA">
-          <small>Caminho UNC para impressoras compartilhadas Windows</small>
-        </div>
-
-        <h3>📄 Configurações de PDF</h3>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="pdfFormat">Formato</label>
-            <select id="pdfFormat">
-              <option value="A4">A4</option>
-              <option value="Letter">Letter</option>
-              <option value="A5">A5</option>
-              <option value="Legal">Legal</option>
-            </select>
+            <div class="stat-card">
+              <div class="stat-icon stat-icon-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Intervalo de Polling</div>
+                <div class="stat-value" id="dashPollingInterval">3s</div>
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="pdfOrientation">Orientação</label>
-            <select id="pdfOrientation">
-              <option value="portrait">Retrato</option>
-              <option value="landscape">Paisagem</option>
-            </select>
+          <div class="card">
+            <div class="card-header">
+              <h2>Visão Geral</h2>
+            </div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="info-label">URL da API:</span>
+                <span class="info-value" id="dashApiUrl">Não configurada</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">UUID da Impressora:</span>
+                <span class="info-value" id="dashPrinterUuid">Não registrada</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Tipo de Impressora:</span>
+                <span class="info-value" id="dashPrinterType">-</span>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div class="form-group">
-            <label for="pdfMargin">Margem</label>
-            <input type="text" id="pdfMargin" value="10mm" placeholder="10mm">
+        <section id="config-section" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h2>Configuração do Agent</h2>
+              <p class="card-subtitle">Configure a conexão com a API e os detalhes da impressora</p>
+            </div>
+            <div class="card-body">
+              <form id="configForm">
+                <div class="form-section">
+                  <h3 class="form-section-title">Conexão API</h3>
+                  <div class="form-group">
+                    <label for="apiUrl">URL da API</label>
+                    <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000/api" required>
+                    <small>Endereço do servidor Laravel</small>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h3 class="form-section-title">Detalhes da Impressora</h3>
+                  <div class="form-group">
+                    <label for="printerName">Nome da Impressora</label>
+                    <input type="text" id="printerName" placeholder="Ex: Cozinha Principal">
+                    <small>Nome descritivo para identificar a impressora</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="printerIdentifier">UUID da Impressora</label>
+                    <div class="input-group">
+                      <input type="text" id="printerIdentifier" placeholder="Clique em 'Registrar Impressora' para gerar" readonly>
+                      <button type="button" id="registerBtn" class="btn btn-outline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        Registrar
+                      </button>
+                    </div>
+                    <small>UUID será gerado automaticamente ao registrar</small>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="printerType">Tipo</label>
+                      <select id="printerType">
+                        <option value="kitchen">Cozinha</option>
+                        <option value="bar">Bar</option>
+                        <option value="receipt">Recibo</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="pollingInterval">Intervalo (ms)</label>
+                      <input type="number" id="pollingInterval" value="3000" min="1000" step="1000">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="printerInterface">Interface da Impressora</label>
+                    <input type="text" id="printerInterface" placeholder="\\COMPUTADOR\IMPRESSORA">
+                    <small>Caminho UNC para impressoras compartilhadas Windows</small>
+                  </div>
+                </div>
+
+                <div class="form-section">
+                  <h3 class="form-section-title">Configurações de PDF</h3>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="pdfFormat">Formato</label>
+                      <select id="pdfFormat">
+                        <option value="A4">A4</option>
+                        <option value="Letter">Letter</option>
+                        <option value="A5">A5</option>
+                        <option value="Legal">Legal</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="pdfOrientation">Orientação</label>
+                      <select id="pdfOrientation">
+                        <option value="portrait">Retrato</option>
+                        <option value="landscape">Paisagem</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="pdfMargin">Margem</label>
+                      <input type="text" id="pdfMargin" value="10mm" placeholder="10mm">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" id="testBtn" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    Testar Conexão
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                      <polyline points="17 21 17 13 7 13 7 21"/>
+                      <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Salvar Configuração
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="form-actions">
-          <button type="button" id="testBtn" class="btn btn-secondary">🔍 Testar Conexão</button>
-          <button type="submit" class="btn btn-primary">💾 Salvar Configuração</button>
-        </div>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>📋 Logs do Agent</h2>
-      <div id="logs" class="logs-container"></div>
-      <button id="clearLogsBtn" class="btn btn-secondary btn-sm">🗑️ Limpar Logs</button>
-    </div>
+        <section id="logs-section" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h2>Logs do Agent</h2>
+              <button id="clearLogsBtn" class="btn btn-sm btn-secondary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                Limpar
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="logs" class="logs-container"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
   </div>
 
   <div id="notification" class="notification"></div>

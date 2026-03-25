@@ -7,9 +7,22 @@ const { retryWithBackoff } = require('./retry-util');
 
 function getChromiumPath() {
   if (process.platform === 'win32') {
-    const electronPath = process.execPath;
-    return electronPath.replace('electron.exe', 'chrome.exe');
+    // When running as Electron child process, look for Chrome in common locations
+    const possiblePaths = [
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+      path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe'),
+      path.join(process.env.PROGRAMFILES || '', 'Google\\Chrome\\Application\\chrome.exe'),
+      path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google\\Chrome\\Application\\chrome.exe'),
+    ];
+
+    for (const chromePath of possiblePaths) {
+      if (chromePath && fs.existsSync(chromePath)) {
+        return chromePath;
+      }
+    }
   }
+  
   return null;
 }
 
@@ -51,7 +64,10 @@ async function convertHTMLtoPDF(htmlContent, options = {}) {
         const chromiumPath = getChromiumPath();
         if (chromiumPath && fs.existsSync(chromiumPath)) {
           launchOptions.executablePath = chromiumPath;
-          logger.info(`Usando Chromium do Electron: ${chromiumPath}`);
+          logger.info(`Usando Chrome: ${chromiumPath}`);
+        } else {
+          logger.error('Google Chrome não encontrado. Instale o Google Chrome para usar a funcionalidade de HTML→PDF');
+          throw new Error('Google Chrome não encontrado. Instale o Google Chrome em: https://www.google.com/chrome/');
         }
 
         browser = await puppeteer.launch(launchOptions);

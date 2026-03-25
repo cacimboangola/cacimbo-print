@@ -2,10 +2,14 @@ const config = require('./config');
 const logger = require('./logger');
 const { fetchPendingJobs, completeJob } = require('./api-client');
 const { printJob, isPrinterConnected } = require('./printer');
+const { CircuitBreaker } = require('./circuit-breaker');
 
 let isProcessing = false;
 const jobFailureCount = new Map(); // Track failures per job ID
 const MAX_POLLING_CYCLES = 3; // Max cycles before giving up on a job
+
+// Circuit breaker for API calls
+const apiCircuitBreaker = new CircuitBreaker(5, 30000);
 
 // Metrics
 let metricsRetriedSuccessfully = 0;
@@ -22,7 +26,8 @@ async function processJobs() {
   isProcessing = true;
 
   try {
-    const jobs = await fetchPendingJobs();
+    // Fetch jobs through circuit breaker
+    const jobs = await apiCircuitBreaker.execute(() => fetchPendingJobs());
 
     if (jobs.length === 0) {
       return;
@@ -82,7 +87,14 @@ async function processJobs() {
       logger.info(`📊 Retry Metrics: ${metricsRetriedSuccessfully} recovered, ${metricsPermanentlyFailed} permanently failed`);
     }
   } catch (error) {
-    logger.error(`Erro no loop de processamento: ${error.message}`);
+    if (error.message === 'Circuit breaker is OPEN') {
+      // Circuit breaker is open - API is offline, don't spam logs
+      const state = apiCircuitBreaker.getState();
+      logger.warn(`⏸️  Circuit breaker OPEN - API offline, pausing polling (retry in ${state.secondsUntilRetry}s)`);
+    } else {
+      // Other error - log it
+      logger.error(`Erro no loop de processamento: ${error.message}`);
+    }
   } finally {
     isProcessing = false;
   }

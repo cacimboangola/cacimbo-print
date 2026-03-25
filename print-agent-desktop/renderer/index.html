@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cacimbo Print Agent - Configuração</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🖨️ Cacimbo Print Agent</h1>
+      <p class="subtitle">Configure e gerencie o agente de impressão</p>
+    </header>
+
+    <div class="status-bar">
+      <div class="status-indicator">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Parado</span>
+      </div>
+      <div class="circuit-breaker-status">
+        <span class="badge" id="circuitBreakerBadge">⚪ API Status</span>
+        <small id="circuitBreakerDetails"></small>
+      </div>
+      <div class="actions">
+        <button id="startBtn" class="btn btn-success">▶ Iniciar</button>
+        <button id="stopBtn" class="btn btn-danger" disabled>⏹ Parar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Configuração</h2>
+      
+      <form id="configForm">
+        <div class="form-group">
+          <label for="apiUrl">URL da API</label>
+          <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000/api" required>
+          <small>Endereço do servidor Laravel</small>
+        </div>
+
+        <div class="form-group">
+          <label for="printerName">Nome da Impressora</label>
+          <input type="text" id="printerName" placeholder="Ex: Cozinha Principal">
+          <small>Nome descritivo para identificar a impressora</small>
+        </div>
+
+        <div class="form-group">
+          <label for="printerIdentifier">UUID da Impressora</label>
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <input type="text" id="printerIdentifier" placeholder="Clique em 'Registrar Impressora' para gerar" readonly style="flex: 1;">
+            <button type="button" id="registerBtn" class="btn btn-primary" style="white-space: nowrap;">📝 Registrar Impressora</button>
+          </div>
+          <small>UUID será gerado automaticamente ao registrar a impressora no sistema</small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="printerType">Tipo</label>
+            <select id="printerType">
+              <option value="kitchen">Cozinha</option>
+              <option value="bar">Bar</option>
+              <option value="receipt">Recibo</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pollingInterval">Intervalo (ms)</label>
+            <input type="number" id="pollingInterval" value="3000" min="1000" step="1000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="printerInterface">Interface da Impressora</label>
+          <input type="text" id="printerInterface" placeholder="\\COMPUTADOR\IMPRESSORA">
+          <small>Caminho UNC para impressoras compartilhadas Windows</small>
+        </div>
+
+        <h3>📄 Configurações de PDF</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pdfFormat">Formato</label>
+            <select id="pdfFormat">
+              <option value="A4">A4</option>
+              <option value="Letter">Letter</option>
+              <option value="A5">A5</option>
+              <option value="Legal">Legal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pdfOrientation">Orientação</label>
+            <select id="pdfOrientation">
+              <option value="portrait">Retrato</option>
+              <option value="landscape">Paisagem</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="pdfMargin">Margem</label>
+            <input type="text" id="pdfMargin" value="10mm" placeholder="10mm">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="testBtn" class="btn btn-secondary">🔍 Testar Conexão</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar Configuração</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>📋 Logs do Agent</h2>
+      <div id="logs" class="logs-container"></div>
+      <button id="clearLogsBtn" class="btn btn-secondary btn-sm">🗑️ Limpar Logs</button>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

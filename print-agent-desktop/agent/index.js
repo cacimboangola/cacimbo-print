@@ -15,6 +15,20 @@ const apiCircuitBreaker = new CircuitBreaker(5, 30000);
 let metricsRetriedSuccessfully = 0;
 let metricsPermanentlyFailed = 0;
 
+// Send circuit breaker status to parent process (Electron main)
+function sendCircuitBreakerStatus() {
+  if (process.send) {
+    const state = apiCircuitBreaker.getState();
+    process.send({
+      type: 'circuit-breaker-status',
+      data: state,
+    });
+  }
+}
+
+// Send status updates periodically
+setInterval(sendCircuitBreakerStatus, 1000);
+
 /**
  * Processa os print jobs pendentes.
  */

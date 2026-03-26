@@ -12,18 +12,31 @@ const client = axios.create({
 });
 
 /**
- * Busca print jobs pendentes para esta impressora.
+ * Busca print jobs pendentes para todas as impressoras configuradas.
  * @returns {Promise<Array>} Lista de print jobs pendentes
  */
 async function fetchPendingJobs() {
   try {
-    const response = await client.get('/print-jobs/pending', {
-      params: {
-        printer_identifier: config.printer.identifier,
-      },
-    });
+    // Buscar jobs para cada impressora configurada
+    const allJobs = [];
+    
+    for (const printer of config.printers) {
+      try {
+        const response = await client.get('/print-jobs/pending', {
+          params: {
+            printer_identifier: printer.id,
+          },
+        });
+        
+        const jobs = response.data.data || [];
+        allJobs.push(...jobs);
+      } catch (printerError) {
+        // Log erro específico da impressora mas continue com as outras
+        logger.warn(`Erro ao buscar jobs para ${printer.name}: ${printerError.message}`);
+      }
+    }
 
-    return response.data.data || [];
+    return allJobs;
   } catch (error) {
     if (error.response) {
       logger.error(`API respondeu com erro ${error.response.status}: ${JSON.stringify(error.response.data)}`);

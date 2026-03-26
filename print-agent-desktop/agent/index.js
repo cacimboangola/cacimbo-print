@@ -122,9 +122,10 @@ async function start() {
   logger.info('  Cacimbo Print Agent - Iniciando...');
   logger.info('========================================');
   logger.info(`API URL: ${config.api.url}`);
-  logger.info(`Impressora: ${config.printer.identifier}`);
-  logger.info(`Tipo: ${config.printer.type}`);
-  logger.info(`Interface: ${config.printer.interface}`);
+  logger.info(`Impressoras configuradas: ${config.printers.length}`);
+  config.printers.forEach((p, index) => {
+    logger.info(`  ${index + 1}. ${p.name} (${p.id}) - ${p.interface}`);
+  });
   logger.info(`Polling: a cada ${config.polling.interval}ms`);
   logger.info('----------------------------------------');
 

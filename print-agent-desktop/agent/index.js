@@ -55,7 +55,14 @@ async function processJobs() {
       
       logger.info(`[Job ${jobId}] Processando (Tipo: ${jobType})`);
 
-      const success = await printJob(job.content);
+      // Passar printer_identifier do job para o content
+      const contentWithPrinter = {
+        ...job.content,
+        printer_identifier: job.printer_identifier,
+        id: job.id
+      };
+
+      const success = await printJob(contentWithPrinter);
 
       if (success === true) {
         // Success - mark as completed

@@ -316,7 +316,8 @@ async function printJob(content, printerId = null) {
   const jobId = content.order_id || content.id || 'unknown';
   
   // Se printerId não foi passado, tentar extrair do content
-  const targetPrinterId = printerId || content.printer_id || content.printerId;
+  // Priorizar printer_identifier (UUID) sobre printer_id (ID numérico)
+  const targetPrinterId = printerId || content.printer_identifier || content.printerId || content.printer_id;
   
   const printerConfig = findPrinterConfig(targetPrinterId);
   logger.info(`[Job ${jobId}] Tipo: ${contentType}, Impressora: ${printerConfig?.name || 'padrão'}`);

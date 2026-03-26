@@ -1,0 +1,16 @@
+[
+  {
+    "id": "7d18cb0b-8b7e-42a2-9c2a-a8fff676321c",
+    "name": "HP PRINT",
+    "type": "epson",
+    "width": 48,
+    "interface": "http://192.168.18.2:3911/"
+  },
+  {
+    "id": "6d98a956-84af-4a39-b47f-15277741c9f9",
+    "name": "PDF PRINTER",
+    "type": "epson",
+    "width": 48,
+    "interface": "\\\\ARNALDO\\TESTE"
+  }
+]

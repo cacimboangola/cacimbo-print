@@ -83,23 +83,28 @@ function cleanupTempFile(filePath) {
 
 /**
  * Extrai o nome da impressora a partir da interface configurada.
- * Ex: "\\\\ARNALDO\\TESTE" → "TESTE"
- * Ex: "\\\\localhost\\MinhaImpressora" → "MinhaImpressora"
- * @param {string} printerInterface - Interface configurada no .env
+ * Para impressoras compartilhadas Windows, retorna o caminho UNC completo.
+ * Ex: "\\ARNALDO\TESTE" → "\\ARNALDO\TESTE"
+ * Ex: "http://192.168.1.100:9100" → null (não suportado para PDF)
+ * @param {string} printerInterface - Interface configurada
  * @returns {string|null}
  */
 function extractPrinterName(printerInterface) {
   if (!printerInterface) return null;
 
-  // Impressora compartilhada Windows: \\HOST\NOME
+  // Impressora compartilhada Windows: retorna o caminho UNC completo
   if (printerInterface.startsWith('\\\\')) {
-    const parts = printerInterface.replace(/\\\\/g, '').split('\\');
-    if (parts.length >= 2) {
-      return parts[parts.length - 1];
-    }
+    return printerInterface;
   }
 
-  return null;
+  // Se for uma URL HTTP (impressora de rede), não é suportado para PDF
+  if (printerInterface.startsWith('http://') || printerInterface.startsWith('https://')) {
+    logger.warn(`Interface HTTP não suportada para impressão de PDF: ${printerInterface}`);
+    return null;
+  }
+
+  // Retorna como está (pode ser nome local da impressora)
+  return printerInterface;
 }
 
 /**

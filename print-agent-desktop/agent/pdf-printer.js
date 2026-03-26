@@ -9,11 +9,10 @@ const { retryWithBackoff } = require('./retry-util');
 /**
  * Imprime um arquivo PDF usando o sistema nativo do Windows.
  * @param {string} pdfPath - Caminho absoluto do arquivo PDF
- * @param {object} options - Opções adicionais
- * @param {string} [options.printer] - Nome da impressora (usa a padrão se não informar)
+ * @param {string} printerInterface - Interface da impressora (ex: \\COMPUTADOR\IMPRESSORA)
  * @returns {Promise<boolean>}
  */
-async function printPDF(pdfPath, options = {}) {
+async function printPDF(pdfPath, printerInterface = null) {
   try {
     if (!fs.existsSync(pdfPath)) {
       logger.error(`Arquivo PDF não encontrado: ${pdfPath}`);
@@ -23,8 +22,9 @@ async function printPDF(pdfPath, options = {}) {
     const result = await retryWithBackoff(async () => {
       const printOptions = {};
 
-      // Extrair nome da impressora da interface configurada
-      const printerName = options.printer || extractPrinterName(config.printer.interface);
+      // Extrair nome da impressora da interface fornecida ou usar a primeira configurada
+      const targetInterface = printerInterface || (config.printers && config.printers[0]?.interface);
+      const printerName = extractPrinterName(targetInterface);
 
       if (printerName) {
         printOptions.printer = printerName;

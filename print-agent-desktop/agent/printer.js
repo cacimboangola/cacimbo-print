@@ -14,18 +14,46 @@ const PRINTER_TYPE_MAP = {
 };
 
 /**
+ * Encontra a configuração de uma impressora pelo ID.
+ * @param {string} printerId - UUID da impressora
+ * @returns {object|null} Configuração da impressora ou null se não encontrada
+ */
+function findPrinterConfig(printerId) {
+  if (!printerId) {
+    // Se não especificado, usar a primeira impressora configurada
+    return config.printers[0] || null;
+  }
+  
+  const printer = config.printers.find(p => p.id === printerId);
+  
+  if (!printer) {
+    logger.warn(`Impressora com ID ${printerId} não encontrada. Usando impressora padrão.`);
+    return config.printers[0] || null;
+  }
+  
+  return printer;
+}
+
+/**
  * Cria uma instância da impressora térmica.
+ * @param {string} printerId - UUID da impressora (opcional)
  * @returns {ThermalPrinter}
  */
-function createPrinter() {
-  const type = PRINTER_TYPE_MAP[config.printer.type] || PrinterTypes.EPSON;
+function createPrinter(printerId = null) {
+  const printerConfig = findPrinterConfig(printerId);
+  
+  if (!printerConfig) {
+    throw new Error('Nenhuma impressora configurada');
+  }
+  
+  const type = PRINTER_TYPE_MAP[printerConfig.type] || PrinterTypes.EPSON;
 
   return new ThermalPrinter({
     type,
-    interface: config.printer.interface,
+    interface: printerConfig.interface,
     characterSet: 'PC860_PORTUGUESE',
     removeSpecialCharacters: false,
-    width: config.printer.width,
+    width: printerConfig.width,
     options: {
       timeout: 5000,
     },
@@ -59,20 +87,28 @@ async function isPrinterConnected() {
  * @param {string|null} content.notes - Observações
  * @param {number} content.order_id - ID do pedido
  * @param {string} content.created_at - Data de criação
+ * @param {string} printerId - UUID da impressora (opcional)
  * @returns {Promise<boolean>} true se imprimiu com sucesso
  */
-async function printOrder(content) {
+async function printOrder(content, printerId = null) {
   try {
-    logger.info(`Iniciando impressão da comanda #${content.order_id}...`);
+    const printerConfig = findPrinterConfig(printerId);
+    
+    if (!printerConfig) {
+      logger.error('Nenhuma impressora configurada para este job');
+      return false;
+    }
+    
+    logger.info(`Iniciando impressão da comanda #${content.order_id} na impressora ${printerConfig.name}...`);
     
     // Se a interface começa com \\ (impressora compartilhada Windows), usar comando nativo
-    if (config.printer.interface.startsWith('\\\\')) {
+    if (printerConfig.interface.startsWith('\\\\')) {
       logger.info('Detectada impressora compartilhada do Windows, usando comando nativo...');
       const textContent = formatOrderAsText(content);
-      const success = await printWithWindowsCommand(config.printer.interface, textContent);
+      const success = await printWithWindowsCommand(printerConfig.interface, textContent);
       
       if (success) {
-        logger.info(`Comanda #${content.order_id} impressa com sucesso (Mesa ${content.table_number})`);
+        logger.info(`Comanda #${content.order_id} impressa com sucesso na ${printerConfig.name} (Mesa ${content.table_number})`);
         return true;
       } else {
         logger.error(`Falha ao imprimir comanda #${content.order_id} via comando Windows`);
@@ -81,7 +117,7 @@ async function printOrder(content) {
     }
     
     // Caso contrário, usar node-thermal-printer (para USB direto ou rede)
-    const printer = createPrinter();
+    const printer = createPrinter(printerId);
 
     printer.alignCenter();
     printer.bold(true);
@@ -199,13 +235,15 @@ function detectContentType(content) {
  * Imprime conteúdo HTML convertendo-o para PDF primeiro.
  * @param {string} htmlContent - HTML completo
  * @param {object} options - Opções de formatação
+ * @param {string} printerId - UUID da impressora (opcional)
  * @returns {Promise<boolean>}
  */
-async function printHTML(htmlContent, options = {}) {
+async function printHTML(htmlContent, options = {}, printerId = null) {
   let pdfPath = null;
 
   try {
-    logger.info('Processando conteúdo HTML...');
+    const printerConfig = findPrinterConfig(printerId);
+    logger.info(`Processando conteúdo HTML para impressora ${printerConfig?.name || 'padrão'}...`);
 
     pdfPath = await convertHTMLtoPDF(htmlContent, options);
 
@@ -214,7 +252,7 @@ async function printHTML(htmlContent, options = {}) {
       return false;
     }
 
-    const success = await printPDF(pdfPath);
+    const success = await printPDF(pdfPath, printerConfig?.interface);
 
     // Aguardar o SumatraPDF finalizar a leitura do arquivo antes de limpar
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -233,17 +271,19 @@ async function printHTML(htmlContent, options = {}) {
 /**
  * Imprime conteúdo PDF a partir de base64.
  * @param {string} base64Content - PDF codificado em base64
+ * @param {string} printerId - UUID da impressora (opcional)
  * @returns {Promise<boolean>}
  */
-async function printPDFBase64(base64Content) {
+async function printPDFBase64(base64Content, printerId = null) {
   let pdfPath = null;
 
   try {
-    logger.info('Processando conteúdo PDF (base64)...');
+    const printerConfig = findPrinterConfig(printerId);
+    logger.info(`Processando conteúdo PDF (base64) para impressora ${printerConfig?.name || 'padrão'}...`);
     logger.debug(`Base64 content length: ${base64Content?.length || 0} chars`);
 
     pdfPath = saveTempPDF(base64Content);
-    const success = await printPDF(pdfPath);
+    const success = await printPDF(pdfPath, printerConfig?.interface);
 
     // Aguardar o SumatraPDF finalizar a leitura do arquivo antes de limpar
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -268,13 +308,18 @@ async function printPDFBase64(base64Content) {
  *   - pdf:   PDF em base64 → imprime diretamente
  *
  * @param {object} content - Conteúdo do print job
+ * @param {string} printerId - UUID da impressora (opcional)
  * @returns {Promise<boolean|null>} true se sucesso, null se falhou após retries
  */
-async function printJob(content) {
+async function printJob(content, printerId = null) {
   const contentType = detectContentType(content);
   const jobId = content.order_id || content.id || 'unknown';
   
-  logger.info(`[Job ${jobId}] Tipo de conteúdo detectado: ${contentType}`);
+  // Se printerId não foi passado, tentar extrair do content
+  const targetPrinterId = printerId || content.printer_id || content.printerId;
+  
+  const printerConfig = findPrinterConfig(targetPrinterId);
+  logger.info(`[Job ${jobId}] Tipo: ${contentType}, Impressora: ${printerConfig?.name || 'padrão'}`);
 
   try {
     const result = await retryWithBackoff(async () => {
@@ -286,7 +331,7 @@ async function printJob(content) {
             landscape: content.landscape || false,
             margin: content.margin || '10mm',
           };
-          const success = await printHTML(htmlContent, options);
+          const success = await printHTML(htmlContent, options, targetPrinterId);
           if (!success) {
             throw new Error('Print HTML failed');
           }
@@ -295,7 +340,7 @@ async function printJob(content) {
 
         case 'pdf': {
           const pdfContent = content.content || content.pdf;
-          const success = await printPDFBase64(pdfContent);
+          const success = await printPDFBase64(pdfContent, targetPrinterId);
           if (!success) {
             throw new Error('Print PDF failed');
           }
@@ -304,7 +349,7 @@ async function printJob(content) {
 
         case 'order':
         default: {
-          const success = await printOrder(content);
+          const success = await printOrder(content, targetPrinterId);
           if (!success) {
             throw new Error('Print order failed');
           }

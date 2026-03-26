@@ -1,0 +1,23 @@
+[
+  {
+    "id": "cozinha-uuid-123",
+    "name": "Cozinha Principal",
+    "type": "epson",
+    "interface": "\\\\COMPUTADOR\\ImpressoraCozinha",
+    "width": 48
+  },
+  {
+    "id": "bar-uuid-456",
+    "name": "Bar",
+    "type": "epson",
+    "interface": "\\\\COMPUTADOR\\ImpressoraBar",
+    "width": 48
+  },
+  {
+    "id": "recibo-uuid-789",
+    "name": "Recibo",
+    "type": "epson",
+    "interface": "\\\\COMPUTADOR\\ImpressoraRecibo",
+    "width": 48
+  }
+]

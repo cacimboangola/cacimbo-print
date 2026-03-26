@@ -16,16 +16,39 @@ if (fs.existsSync(configPath)) {
   });
 }
 
+// Carrega configuração de impressoras do arquivo JSON
+function loadPrintersConfig() {
+  const printersConfigPath = path.join(__dirname, 'printers.json');
+  
+  if (fs.existsSync(printersConfigPath)) {
+    try {
+      const data = fs.readFileSync(printersConfigPath, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      console.error('[ERRO] Falha ao carregar printers.json:', error.message);
+      return [];
+    }
+  }
+  
+  // Fallback: criar configuração de impressora única a partir do .env (compatibilidade)
+  if (process.env.PRINTER_IDENTIFIER) {
+    return [{
+      id: process.env.PRINTER_IDENTIFIER,
+      name: process.env.PRINTER_NAME || 'Impressora Principal',
+      type: process.env.PRINTER_TYPE || 'epson',
+      interface: process.env.PRINTER_INTERFACE || 'tcp://localhost:9100',
+      width: parseInt(process.env.PRINTER_WIDTH || '48', 10),
+    }];
+  }
+  
+  return [];
+}
+
 const config = {
   api: {
     url: process.env.API_URL || 'http://localhost:8000/api',
   },
-  printer: {
-    identifier: process.env.PRINTER_IDENTIFIER || '',
-    type: process.env.PRINTER_TYPE || 'epson',
-    interface: process.env.PRINTER_INTERFACE || 'tcp://localhost:9100',
-    width: parseInt(process.env.PRINTER_WIDTH || '48', 10),
-  },
+  printers: loadPrintersConfig(),
   polling: {
     interval: parseInt(process.env.POLLING_INTERVAL || '3000', 10),
   },
@@ -39,9 +62,14 @@ const config = {
   },
 };
 
-if (!config.printer.identifier) {
-  console.error('[ERRO] PRINTER_IDENTIFIER não configurado. Configure o .env');
+if (!config.printers || config.printers.length === 0) {
+  console.error('[ERRO] Nenhuma impressora configurada. Configure printers.json ou .env');
   process.exit(1);
 }
+
+console.log(`[CONFIG] ${config.printers.length} impressora(s) configurada(s):`);
+config.printers.forEach(p => {
+  console.log(`  - ${p.name} (${p.id}) → ${p.interface}`);
+});
 
 module.exports = config;

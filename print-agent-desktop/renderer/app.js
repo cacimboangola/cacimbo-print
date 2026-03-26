@@ -522,6 +522,66 @@ function toggleApiPrinter(printerId, element) {
     selectedApiPrinters.add(printerId);
     element.classList.add('selected');
   }
+  
+  // Update config fields
+  renderSelectedPrintersConfig();
+}
+
+function renderSelectedPrintersConfig() {
+  const configDiv = document.getElementById('selectedPrintersConfig');
+  const containerDiv = document.getElementById('apiPrintersConfig');
+  
+  if (selectedApiPrinters.size === 0) {
+    containerDiv.style.display = 'none';
+    configDiv.innerHTML = '';
+    return;
+  }
+  
+  containerDiv.style.display = 'block';
+  configDiv.innerHTML = '';
+  
+  selectedApiPrinters.forEach(printerId => {
+    const printer = apiPrinters.find(p => p.id === printerId);
+    if (!printer) return;
+    
+    const configItem = document.createElement('div');
+    configItem.style.cssText = 'background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius); margin-bottom: 12px;';
+    configItem.innerHTML = `
+      <div style="font-weight: 600; color: var(--gray-100); margin-bottom: 12px;">
+        ${printer.name}
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px;">
+        <div>
+          <label style="display: block; font-size: 13px; color: var(--gray-400); margin-bottom: 6px;">
+            Interface (Caminho UNC)
+          </label>
+          <input 
+            type="text" 
+            id="interface_${printer.id}" 
+            placeholder="\\\\COMPUTADOR\\IMPRESSORA"
+            style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--gray-700); border-radius: var(--radius-sm); color: var(--gray-100); font-size: 14px;"
+            required
+          />
+        </div>
+        <div style="width: 100px;">
+          <label style="display: block; font-size: 13px; color: var(--gray-400); margin-bottom: 6px;">
+            Largura
+          </label>
+          <input 
+            type="number" 
+            id="width_${printer.id}" 
+            value="48" 
+            min="32" 
+            max="80"
+            style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--gray-700); border-radius: var(--radius-sm); color: var(--gray-100); font-size: 14px;"
+            required
+          />
+        </div>
+      </div>
+    `;
+    
+    configDiv.appendChild(configItem);
+  });
 }
 
 async function saveSelectedApiPrinters() {
@@ -530,35 +590,53 @@ async function saveSelectedApiPrinters() {
     return;
   }
   
-  const printerInterface = document.getElementById('printerInterfaceApi').value.trim();
-  const printerWidth = parseInt(document.getElementById('printerWidthApi').value);
+  // Validate and collect configs for each selected printer
+  const configs = [];
+  let hasError = false;
   
-  if (!printerInterface) {
-    showNotification('Preencha a interface da impressora', 'error');
-    return;
-  }
-  
-  // Add selected printers to the list
   selectedApiPrinters.forEach(printerId => {
     const apiPrinter = apiPrinters.find(p => p.id === printerId);
-    if (apiPrinter) {
-      // Check if printer already exists
-      const exists = printers.find(p => p.id === apiPrinter.identifier);
-      if (!exists) {
-        printers.push({
-          id: apiPrinter.identifier,
-          name: apiPrinter.name,
-          type: 'epson', // Default type, can be customized
-          width: printerWidth,
-          interface: printerInterface,
-        });
-      }
+    if (!apiPrinter) return;
+    
+    const interfaceInput = document.getElementById(`interface_${printerId}`);
+    const widthInput = document.getElementById(`width_${printerId}`);
+    
+    if (!interfaceInput || !widthInput) {
+      hasError = true;
+      return;
+    }
+    
+    const printerInterface = interfaceInput.value.trim();
+    const printerWidth = parseInt(widthInput.value);
+    
+    if (!printerInterface) {
+      showNotification(`Preencha a interface para ${apiPrinter.name}`, 'error');
+      hasError = true;
+      return;
+    }
+    
+    configs.push({
+      id: apiPrinter.identifier,
+      name: apiPrinter.name,
+      type: 'epson', // Default type
+      width: printerWidth,
+      interface: printerInterface,
+    });
+  });
+  
+  if (hasError) return;
+  
+  // Add configs to printers list
+  configs.forEach(config => {
+    const exists = printers.find(p => p.id === config.id);
+    if (!exists) {
+      printers.push(config);
     }
   });
   
   try {
     await window.electronAPI.savePrinters(printers);
-    showNotification(`${selectedApiPrinters.size} impressora(s) adicionada(s) com sucesso!`, 'success');
+    showNotification(`${configs.length} impressora(s) adicionada(s) com sucesso!`, 'success');
     renderPrinters();
     closePrinterModal();
     selectedApiPrinters.clear();

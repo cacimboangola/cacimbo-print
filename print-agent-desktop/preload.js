@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAgentStatus: () => ipcRenderer.invoke('get-agent-status'),
   testConnection: (apiUrl) => ipcRenderer.invoke('test-connection', apiUrl),
   registerPrinter: (apiUrl, printerData) => ipcRenderer.invoke('register-printer', apiUrl, printerData),
+  loadPrinters: () => ipcRenderer.invoke('load-printers'),
+  savePrinters: (printers) => ipcRenderer.invoke('save-printers', printers),
   
   onAgentStatus: (callback) => {
     ipcRenderer.on('agent-status', (event, data) => callback(data));

@@ -316,8 +316,46 @@ ipcMain.handle('stop-agent', async () => {
   return { success: true };
 });
 
-ipcMain.handle('get-agent-status', async () => {
+ipcMain.handle('get-agent-status', () => {
   return { running: agentRunning };
+});
+
+const PRINTERS_PATH = path.join(__dirname, 'agent', 'printers.json');
+
+ipcMain.handle('load-printers', async () => {
+  try {
+    if (fs.existsSync(PRINTERS_PATH)) {
+      const content = fs.readFileSync(PRINTERS_PATH, 'utf8');
+      return JSON.parse(content);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error loading printers:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('save-printers', async (event, printers) => {
+  try {
+    const dir = path.dirname(PRINTERS_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    fs.writeFileSync(PRINTERS_PATH, JSON.stringify(printers, null, 2), 'utf8');
+    console.log('Printers saved successfully');
+    
+    // Restart agent if running to reload printers
+    if (agentRunning) {
+      stopAgent();
+      setTimeout(() => startAgent(), 1000);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving printers:', error);
+    throw error;
+  }
 });
 
 ipcMain.handle('test-connection', async (event, apiUrl) => {

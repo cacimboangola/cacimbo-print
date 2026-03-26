@@ -1,0 +1,445 @@
+openapi: 3.0.0
+info:
+  title: Cacimbo Print API
+  description: API REST para sistema de impressão distribuído. Permite PDVs/restaurantes na nuvem imprimirem em impressoras locais via polling pattern.
+  version: 1.0.0
+  contact:
+    email: suporte@cacimboprint.com
+
+servers:
+  - url: http://localhost:8000/api
+    description: Servidor de Desenvolvimento Local
+  - url: https://api.cacimboprint.com/api
+    description: Servidor de Produção
+
+tags:
+  - name: Printers
+    description: Gerenciamento de impressoras
+  - name: Orders
+    description: Gerenciamento de pedidos
+  - name: Print Jobs
+    description: Gerenciamento de jobs de impressão
+
+components:
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum Token
+      description: Laravel Sanctum authentication token
+
+  schemas:
+    Printer:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Cozinha Principal
+        identifier:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        type:
+          type: string
+          enum: [kitchen, bar, receipt]
+          example: kitchen
+        is_active:
+          type: boolean
+          example: true
+        pending_print_jobs_count:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        table_number:
+          type: string
+          example: Mesa 5
+        items:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PrintJob:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        printer_id:
+          type: integer
+          example: 1
+        order_id:
+          type: integer
+          nullable: true
+          example: 5
+        content:
+          type: object
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          example: pending
+        attempts:
+          type: integer
+          example: 0
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+paths:
+  /printers:
+    get:
+      tags:
+        - Printers
+      summary: Listar todas as impressoras
+      description: Retorna lista de todas as impressoras cadastradas com contagem de jobs pendentes
+      responses:
+        '200':
+          description: Lista de impressoras retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Printer'
+
+  /printers/register:
+    post:
+      tags:
+        - Printers
+      summary: Registrar nova impressora
+      description: Cria uma nova impressora no sistema e gera um UUID único para identificação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+              properties:
+                name:
+                  type: string
+                  example: Cozinha Principal
+                  description: Nome descritivo da impressora
+                type:
+                  type: string
+                  enum: [kitchen, bar, receipt]
+                  example: kitchen
+                  description: Tipo da impressora
+      responses:
+        '201':
+          description: Impressora registrada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Impressora registrada com sucesso.
+                  data:
+                    $ref: '#/components/schemas/Printer'
+        '422':
+          description: Erro de validação
+
+  /printers/{printer}/toggle:
+    patch:
+      tags:
+        - Printers
+      summary: Ativar/desativar impressora
+      description: Alterna o status de ativação da impressora (ativa/inativa)
+      parameters:
+        - name: printer
+          in: path
+          required: true
+          description: ID da impressora
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Status da impressora alterado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Impressora ativada.
+                  data:
+                    $ref: '#/components/schemas/Printer'
+        '404':
+          description: Impressora não encontrada
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Listar pedidos
+      description: Retorna lista paginada de pedidos com seus print jobs e impressoras
+      parameters:
+        - name: page
+          in: query
+          description: Número da página
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Lista de pedidos retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  current_page:
+                    type: integer
+                    example: 1
+                  per_page:
+                    type: integer
+                    example: 20
+                  total:
+                    type: integer
+                    example: 100
+
+    post:
+      tags:
+        - Orders
+      summary: Criar pedido
+      description: Cria um novo pedido e automaticamente dispara print jobs para impressoras ativas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - table_number
+                - items
+              properties:
+                table_number:
+                  type: string
+                  example: Mesa 5
+                  description: Número ou identificação da mesa
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Hambúrguer
+                      quantity:
+                        type: integer
+                        example: 2
+                      price:
+                        type: number
+                        format: float
+                        example: 25.90
+                      notes:
+                        type: string
+                        example: Sem cebola
+      responses:
+        '201':
+          description: Pedido criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Pedido criado com sucesso.
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '422':
+          description: Erro de validação
+
+  /orders/{order}:
+    get:
+      tags:
+        - Orders
+      summary: Visualizar pedido
+      description: Retorna detalhes de um pedido específico com seus print jobs e impressoras
+      parameters:
+        - name: order
+          in: path
+          required: true
+          description: ID do pedido
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Detalhes do pedido retornados com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Pedido não encontrado
+
+  /print-jobs:
+    post:
+      tags:
+        - Print Jobs
+      summary: Criar print job direto
+      description: Cria um job de impressão direto (HTML, PDF ou Order) para uma impressora específica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - printer_id
+                - content
+              properties:
+                printer_id:
+                  type: integer
+                  example: 1
+                  description: ID da impressora de destino
+                content:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [html, pdf, order]
+                      example: pdf
+                      description: Tipo de conteúdo
+                    content:
+                      type: string
+                      example: JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL...
+                      description: Conteúdo em base64 (para PDF) ou HTML string
+      responses:
+        '201':
+          description: Print job criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Print job criado com sucesso.
+                  data:
+                    $ref: '#/components/schemas/PrintJob'
+        '422':
+          description: Erro de validação
+        '404':
+          description: Impressora não encontrada
+
+  /print-jobs/pending:
+    get:
+      tags:
+        - Print Jobs
+      summary: Obter jobs pendentes (Polling)
+      description: Endpoint para o print agent local fazer polling de jobs pendentes. Atualiza last_seen_at da impressora.
+      parameters:
+        - name: printer_identifier
+          in: query
+          required: true
+          description: UUID da impressora
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Lista de jobs pendentes retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PrintJob'
+        '422':
+          description: Erro de validação - printer_identifier inválido ou não existe
+
+  /print-jobs/{printJob}/complete:
+    patch:
+      tags:
+        - Print Jobs
+      summary: Marcar job como completo ou falho
+      description: Endpoint para o print agent local marcar um job como completo (sucesso) ou failed (falha)
+      parameters:
+        - name: printJob
+          in: path
+          required: true
+          description: ID do print job
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [completed, failed]
+                  example: completed
+                  description: Status final do job
+      responses:
+        '200':
+          description: Print job atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Print job atualizado.
+                  data:
+                    $ref: '#/components/schemas/PrintJob'
+        '404':
+          description: Print job não encontrado
+        '422':
+          description: Erro de validação

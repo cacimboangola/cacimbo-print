@@ -69,7 +69,6 @@ Restaurantes e PDVs que operam sistemas na nuvem (VPS) precisam imprimir comanda
 
 ### Active (Melhorias Identificadas)
 - [ ] REQ-013: Retry logic para falhas de impressão
-- [ ] REQ-014: Autenticação no registro de impressoras
 - [ ] REQ-015: Validação de configuração no desktop app
 - [ ] REQ-016: Consistência de tipos de impressora
 - [ ] REQ-017: Error boundaries no desktop app

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cacimbo Print - Configuração</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖨️ Cacimbo Print Agent</h1>
+            <p>Configuração do Agente de Impressão</p>
+        </header>
+
+        <div id="alert" class="alert hidden"></div>
+
+        <div class="card">
+            <h2>Configurações da API</h2>
+            
+            <div class="form-group">
+                <label for="apiUrl">URL da API *</label>
+                <input type="text" id="apiUrl" placeholder="http://localhost:8000/api" required>
+                <small>URL do servidor Laravel (ex: http://seu-servidor.com/api)</small>
+            </div>
+
+            <button id="testConnectionBtn" class="btn btn-secondary">
+                <span class="btn-text">Testar Conexão</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>Registrar Nova Impressora</h2>
+            <p class="card-description">Se você ainda não tem uma impressora registrada, preencha os dados abaixo:</p>
+            
+            <div class="form-group">
+                <label for="printerName">Nome da Impressora</label>
+                <input type="text" id="printerName" placeholder="Ex: Cozinha Principal">
+            </div>
+
+            <div class="form-group">
+                <label for="printerTypeRegister">Tipo</label>
+                <select id="printerTypeRegister">
+                    <option value="kitchen">Cozinha (Kitchen)</option>
+                    <option value="bar">Bar</option>
+                    <option value="receipt">Recibo/Caixa (Receipt)</option>
+                </select>
+            </div>
+
+            <button id="registerPrinterBtn" class="btn btn-secondary">
+                <span class="btn-text">Registrar Impressora</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <div class="card">
+            <h2>Configurações da Impressora</h2>
+            
+            <div class="form-group">
+                <label for="printerIdentifier">Identificador (UUID) *</label>
+                <input type="text" id="printerIdentifier" placeholder="uuid-da-impressora" required>
+                <small>UUID gerado ao registrar a impressora</small>
+            </div>
+
+            <div class="form-group">
+                <label for="printerType">Tipo da Impressora</label>
+                <select id="printerType">
+                    <option value="epson">Epson</option>
+                    <option value="star">Star</option>
+                    <option value="daruma">Daruma</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="printerInterface">Interface da Impressora *</label>
+                <input type="text" id="printerInterface" placeholder="tcp://localhost:9100" required>
+                <small>
+                    USB Windows: \\localhost\NomeDaImpressora<br>
+                    USB Linux: /dev/usb/lp0<br>
+                    Rede: tcp://192.168.1.100:9100
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="printerWidth">Largura do Papel (caracteres)</label>
+                <input type="number" id="printerWidth" value="48" min="32" max="80">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Configurações Avançadas</h2>
+            
+            <div class="form-group">
+                <label for="pollingInterval">Intervalo de Polling (ms)</label>
+                <input type="number" id="pollingInterval" value="3000" min="1000" max="10000" step="1000">
+                <small>Tempo entre verificações de novos jobs (padrão: 3000ms = 3s)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="logLevel">Nível de Log</label>
+                <select id="logLevel">
+                    <option value="error">Error</option>
+                    <option value="warn">Warn</option>
+                    <option value="info" selected>Info</option>
+                    <option value="debug">Debug</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="saveBtn" class="btn btn-primary">
+                <span class="btn-text">💾 Salvar Configurações</span>
+                <span class="spinner hidden"></span>
+            </button>
+        </div>
+
+        <footer>
+            <p>Após salvar, feche esta janela e execute: <code>npm start</code></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

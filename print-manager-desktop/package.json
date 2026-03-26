@@ -18,15 +18,16 @@
     "winston": "^3.14.0"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.1.0"
+    "electron": "^41.0.4",
+    "electron-builder": "^26.8.1"
   },
   "build": {
     "appId": "com.cacimboprint.manager",
     "productName": "Cacimbo Print Manager",
+    "forceCodeSigning": false,
     "win": {
       "target": "nsis",
-      "sign": false
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,

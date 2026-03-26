@@ -452,11 +452,154 @@ async function deletePrinter(index) {
   }
 }
 
+// API Printer Selection
+let apiPrinters = [];
+let selectedApiPrinters = new Set();
+
+async function fetchApiPrinters() {
+  try {
+    const config = await window.electronAPI.getConfig();
+    const apiUrl = config.API_URL || 'http://127.0.0.1:8000/api';
+    
+    showNotification('Buscando impressoras da API...', 'info');
+    
+    const result = await window.electronAPI.fetchApiPrinters(apiUrl);
+    
+    if (result.success && result.data) {
+      apiPrinters = result.data;
+      renderApiPrinters();
+      showNotification(`${apiPrinters.length} impressora(s) encontrada(s)`, 'success');
+    } else {
+      showNotification('Erro ao buscar impressoras: ' + (result.error || 'Erro desconhecido'), 'error');
+      document.getElementById('apiPrintersList').innerHTML = '<p class="text-muted">Erro ao carregar impressoras da API</p>';
+    }
+  } catch (error) {
+    console.error('Error fetching API printers:', error);
+    showNotification('Erro ao buscar impressoras da API', 'error');
+  }
+}
+
+function renderApiPrinters() {
+  const list = document.getElementById('apiPrintersList');
+  if (!list || apiPrinters.length === 0) {
+    list.innerHTML = '<p class="text-muted">Nenhuma impressora registrada na API</p>';
+    return;
+  }
+  
+  list.innerHTML = '';
+  
+  apiPrinters.forEach(printer => {
+    const item = document.createElement('div');
+    item.className = 'api-printer-item';
+    item.dataset.printerId = printer.id;
+    
+    item.innerHTML = `
+      <div class="api-printer-checkbox">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="api-printer-info">
+        <div class="api-printer-name">${printer.name}</div>
+        <div class="api-printer-meta">
+          <span class="api-printer-badge">UUID: ${printer.identifier}</span>
+          <span class="api-printer-badge">Tipo: ${printer.type}</span>
+          <span class="api-printer-badge">Status: ${printer.is_active ? '✓ Ativo' : '✗ Inativo'}</span>
+        </div>
+      </div>
+    `;
+    
+    item.addEventListener('click', () => toggleApiPrinter(printer.id, item));
+    list.appendChild(item);
+  });
+}
+
+function toggleApiPrinter(printerId, element) {
+  if (selectedApiPrinters.has(printerId)) {
+    selectedApiPrinters.delete(printerId);
+    element.classList.remove('selected');
+  } else {
+    selectedApiPrinters.add(printerId);
+    element.classList.add('selected');
+  }
+}
+
+async function saveSelectedApiPrinters() {
+  if (selectedApiPrinters.size === 0) {
+    showNotification('Selecione pelo menos uma impressora', 'error');
+    return;
+  }
+  
+  const printerInterface = document.getElementById('printerInterfaceApi').value.trim();
+  const printerWidth = parseInt(document.getElementById('printerWidthApi').value);
+  
+  if (!printerInterface) {
+    showNotification('Preencha a interface da impressora', 'error');
+    return;
+  }
+  
+  // Add selected printers to the list
+  selectedApiPrinters.forEach(printerId => {
+    const apiPrinter = apiPrinters.find(p => p.id === printerId);
+    if (apiPrinter) {
+      // Check if printer already exists
+      const exists = printers.find(p => p.id === apiPrinter.identifier);
+      if (!exists) {
+        printers.push({
+          id: apiPrinter.identifier,
+          name: apiPrinter.name,
+          type: 'epson', // Default type, can be customized
+          width: printerWidth,
+          interface: printerInterface,
+        });
+      }
+    }
+  });
+  
+  try {
+    await window.electronAPI.savePrinters(printers);
+    showNotification(`${selectedApiPrinters.size} impressora(s) adicionada(s) com sucesso!`, 'success');
+    renderPrinters();
+    closePrinterModal();
+    selectedApiPrinters.clear();
+  } catch (error) {
+    console.error('Error saving printers:', error);
+    showNotification('Erro ao salvar impressoras', 'error');
+  }
+}
+
+// Mode toggle functionality
+function toggleMode(mode) {
+  const apiMode = document.getElementById('apiMode');
+  const manualMode = document.getElementById('manualMode');
+  const apiModeBtn = document.getElementById('apiModeBtn');
+  const manualModeBtn = document.getElementById('manualModeBtn');
+  const saveFromApiBtn = document.getElementById('saveFromApiBtn');
+  
+  if (mode === 'api') {
+    apiMode.classList.add('active');
+    manualMode.classList.remove('active');
+    apiModeBtn.classList.add('active');
+    manualModeBtn.classList.remove('active');
+    saveFromApiBtn.style.display = 'flex';
+  } else {
+    apiMode.classList.remove('active');
+    manualMode.classList.add('active');
+    apiModeBtn.classList.remove('active');
+    manualModeBtn.classList.add('active');
+    saveFromApiBtn.style.display = 'none';
+  }
+}
+
 // Printer management event listeners
 document.getElementById('addPrinterBtn')?.addEventListener('click', () => openPrinterModal());
 document.getElementById('closeModal')?.addEventListener('click', closePrinterModal);
 document.getElementById('cancelBtn')?.addEventListener('click', closePrinterModal);
 document.getElementById('printerForm')?.addEventListener('submit', savePrinter);
+document.getElementById('fetchPrintersBtn')?.addEventListener('click', fetchApiPrinters);
+document.getElementById('saveFromApiBtn')?.addEventListener('click', saveSelectedApiPrinters);
+document.getElementById('apiModeBtn')?.addEventListener('click', () => toggleMode('api'));
+document.getElementById('manualModeBtn')?.addEventListener('click', () => toggleMode('manual'));
 
 // Close modal on background click
 document.getElementById('printerModal')?.addEventListener('click', (e) => {

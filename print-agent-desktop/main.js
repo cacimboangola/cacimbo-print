@@ -368,6 +368,24 @@ ipcMain.handle('test-connection', async (event, apiUrl) => {
   }
 });
 
+ipcMain.handle('fetch-api-printers', async (event, apiUrl) => {
+  try {
+    const axios = require('axios');
+    const response = await axios.get(`${apiUrl}/printers`, { timeout: 10000 });
+    
+    if (response.data && Array.isArray(response.data)) {
+      return { success: true, data: response.data };
+    } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      return { success: true, data: response.data.data };
+    } else {
+      return { success: false, error: 'Invalid response format from API' };
+    }
+  } catch (error) {
+    console.error('Error fetching API printers:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle('register-printer', async (event, apiUrl, printerData) => {
   try {
     const axios = require('axios');

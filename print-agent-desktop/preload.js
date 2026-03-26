@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   registerPrinter: (apiUrl, printerData) => ipcRenderer.invoke('register-printer', apiUrl, printerData),
   loadPrinters: () => ipcRenderer.invoke('load-printers'),
   savePrinters: (printers) => ipcRenderer.invoke('save-printers', printers),
+  fetchApiPrinters: (apiUrl) => ipcRenderer.invoke('fetch-api-printers', apiUrl),
   
   onAgentStatus: (callback) => {
     ipcRenderer.on('agent-status', (event, data) => callback(data));

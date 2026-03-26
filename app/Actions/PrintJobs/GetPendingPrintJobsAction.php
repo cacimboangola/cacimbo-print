@@ -12,16 +12,18 @@ final readonly class GetPendingPrintJobsAction
      */
     public function handle(string $printerIdentifier): Collection
     {
-        return PrintJob::query()
+        $jobs = PrintJob::query()
             ->with(['order', 'printer:id,identifier'])
             ->whereHas('printer', fn ($query) => $query->where('identifier', $printerIdentifier)->where('is_active', true))
             ->where('status', 'pending')
             ->oldest()
-            ->get()
-            ->map(function (PrintJob $job) {
-                $data = $job->toArray();
-                $data['printer_identifier'] = $job->printer->identifier;
-                return $data;
-            });
+            ->get();
+
+        // Adicionar printer_identifier a cada job
+        $jobs->each(function (PrintJob $job) {
+            $job->printer_identifier = $job->printer->identifier;
+        });
+
+        return $jobs;
     }
 }

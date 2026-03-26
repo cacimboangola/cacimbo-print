@@ -31,7 +31,18 @@ Thumbs.db
 **/out/
 **/build/
 **/.cache/
+dist/
+out/
+build/
 
 # Package locks (keep package.json but ignore locks for now)
 package-lock.json
 **/package-lock.json
+
+# Large binaries and executables
+*.exe
+*.dll
+*.dylib
+*.so
+*.asar
+*.pak

@@ -66,8 +66,18 @@ PRINTER_WIDTH=48
 
 Registre cada impressora na API Laravel:
 
+**Produção:**
 ```bash
-POST /api/printers/register
+POST https://cacimbo-print-main-so67gi.laravel.cloud/api/printers/register
+{
+  "name": "Cozinha Principal",
+  "type": "kitchen"
+}
+```
+
+**Local:**
+```bash
+POST http://localhost:8000/api/printers/register
 {
   "name": "Cozinha Principal",
   "type": "kitchen"

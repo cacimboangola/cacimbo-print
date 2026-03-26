@@ -44,7 +44,9 @@ O instalador será gerado em `dist/Cacimbo-Print-Agent-Setup-1.0.0.exe`
 ### 2. Configuração Inicial
 1. A janela de configuração abrirá automaticamente
 2. Preencha os campos:
-   - **URL da API**: Endereço do servidor Laravel (ex: `http://192.168.1.100:8000/api`)
+   - **URL da API**: Endereço do servidor Laravel
+     - Produção: `https://cacimbo-print-main-so67gi.laravel.cloud/api`
+     - Local: `http://192.168.1.100:8000/api`
    - **Identificador da Impressora**: UUID gerado no registro da impressora
    - **Tipo**: Tipo da impressora térmica (Epson, Star, Daruma)
    - **Interface**: Caminho UNC da impressora (ex: `\\COMPUTADOR\IMPRESSORA`)

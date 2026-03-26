@@ -9,7 +9,7 @@ info:
 servers:
   - url: http://localhost:8000/api
     description: Servidor de Desenvolvimento Local
-  - url: https://api.cacimboprint.com/api
+  - url: https://cacimbo-print-main-so67gi.laravel.cloud/api
     description: Servidor de Produção
 
 tags:

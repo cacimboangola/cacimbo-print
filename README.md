@@ -1,59 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Cacimbo Print
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de impressão remota para restaurantes e estabelecimentos comerciais. Permite enviar documentos para impressão em impressoras térmicas e convencionais através de uma API REST.
 
-## About Laravel
+## 🌐 URLs
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Produção:** https://cacimbo-print-main-so67gi.laravel.cloud
+- **API Docs:** https://cacimbo-print-main-so67gi.laravel.cloud/api-docs.html
+- **Local:** http://localhost:8000
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🎯 Características
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- ✅ **API REST** completa para gerenciamento de impressoras e jobs
+- ✅ **Swagger/OpenAPI** documentação interativa
+- ✅ **Multi-Printer Support** - múltiplas impressoras por agente
+- ✅ **Print Agent Desktop** - aplicação Windows com interface gráfica
+- ✅ **Suporte a múltiplos formatos** - HTML, PDF, impressão térmica
+- ✅ **Circuit Breaker** - proteção contra falhas de API
+- ✅ **Polling inteligente** - busca automática de jobs pendentes
 
-## Learning Laravel
+## 📦 Componentes
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 1. Laravel API (Backend)
+API REST para gerenciar impressoras e jobs de impressão.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Tecnologias:**
+- Laravel 12
+- MySQL
+- Swagger/OpenAPI
 
-## Laravel Sponsors
+**Principais Endpoints:**
+- `POST /api/printers/register` - Registrar impressora
+- `GET /api/printers` - Listar impressoras
+- `POST /api/print-jobs` - Criar job de impressão
+- `GET /api/print-jobs/pending/{printer_id}` - Buscar jobs pendentes
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Print Agent Desktop
+Aplicação Windows para gerenciar impressoras localmente.
 
-### Premium Partners
+**Características:**
+- Interface gráfica moderna
+- Gerenciamento de múltiplas impressoras via UI
+- Buscar impressoras da API e selecionar via checkboxes
+- Auto-start com Windows
+- System tray integration
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Documentação:** [print-agent-desktop/README.md](print-agent-desktop/README.md)
 
-## Contributing
+## 🚀 Instalação
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Backend (Laravel)
 
-## Code of Conduct
+```bash
+# Clone o repositório
+git clone https://github.com/cacimboangola/cacimbo-print.git
+cd cacimbo-print
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Instale dependências
+composer install
 
-## Security Vulnerabilities
+# Configure o ambiente
+cp .env.example .env
+php artisan key:generate
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Configure o banco de dados no .env
+DB_DATABASE=cacimbo_print
+DB_USERNAME=root
+DB_PASSWORD=
 
-## License
+# Execute migrations
+php artisan migrate
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Inicie o servidor
+php artisan serve
+```
+
+### Print Agent Desktop
+
+```bash
+cd print-agent-desktop
+npm install
+npm start
+```
+
+**Build do instalador Windows:**
+```bash
+npm run build
+```
+
+## 📖 Documentação
+
+- **API Documentation:** [Swagger UI](https://cacimbo-print-main-so67gi.laravel.cloud/api-docs.html)
+- **Multi-Printer Setup:** [MULTI-PRINTER.md](print-agent-desktop/MULTI-PRINTER.md)
+- **Print Agent Desktop:** [print-agent-desktop/README.md](print-agent-desktop/README.md)
+
+## 🔧 Configuração de Produção
+
+A aplicação está hospedada no **Laravel Cloud**:
+
+**URL Base:** `https://cacimbo-print-main-so67gi.laravel.cloud`
+
+**Configurar Print Agent para Produção:**
+1. Abra o Print Agent Desktop
+2. Configure a URL da API: `https://cacimbo-print-main-so67gi.laravel.cloud/api`
+3. Registre suas impressoras via UI ou API
+4. Inicie o agente
+
+## 📝 Licença
+
+Este projeto é proprietário da Cacimbo Angola.

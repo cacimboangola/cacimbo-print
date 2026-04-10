@@ -144,25 +144,70 @@ function startAgent() {
     return;
   }
 
+  // Criar arquivo de configuração padrão se não existir
   if (!fs.existsSync(CONFIG_PATH)) {
+    const dir = path.dirname(CONFIG_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    const defaultConfig = [
+      'API_URL=http://127.0.0.1:8000/api',
+      'POLLING_INTERVAL=3000',
+      'LOG_LEVEL=info',
+      'PDF_PAGE_FORMAT=A4',
+      'PDF_ORIENTATION=portrait',
+      'PDF_MARGIN=10mm',
+    ].join('\n');
+    
+    fs.writeFileSync(CONFIG_PATH, defaultConfig, 'utf8');
+    console.log('Arquivo de configuração criado:', CONFIG_PATH);
+  }
+
+  // Determinar o caminho correto do agent baseado se está empacotado ou não
+  let agentPath;
+  let agentCwd;
+  
+  if (app.isPackaged) {
+    // Quando empacotado, usar o caminho desempacotado (asarUnpack)
+    agentPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'agent', 'index.js');
+    agentCwd = path.join(process.resourcesPath, 'app.asar.unpacked', 'agent');
+  } else {
+    // Em desenvolvimento, usar __dirname
+    agentPath = path.join(__dirname, 'agent', 'index.js');
+    agentCwd = path.join(__dirname, 'agent');
+  }
+  
+  console.log('Agent path:', agentPath);
+  console.log('Agent cwd:', agentCwd);
+  
+  if (!fs.existsSync(agentPath)) {
+    const errorMsg = `Agent não encontrado em: ${agentPath}`;
+    console.error(errorMsg);
     if (mainWindow) {
-      mainWindow.webContents.send('agent-error', 'Configuração não encontrada. Configure o agent primeiro.');
+      mainWindow.webContents.send('agent-error', errorMsg);
     }
     return;
   }
-
-  const agentPath = path.join(__dirname, 'agent', 'index.js');
   
-  agentProcess = fork(agentPath, [], {
-    cwd: path.join(__dirname, 'agent'),
-    env: {
-      ...process.env,
-      NODE_ENV: 'production',
-      ELECTRON_RUN_AS_NODE: '1',
-      CONFIG_PATH: CONFIG_PATH,
-    },
-    stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
-  });
+  try {
+    agentProcess = fork(agentPath, [], {
+      cwd: agentCwd,
+      env: {
+        ...process.env,
+        NODE_ENV: 'production',
+        ELECTRON_RUN_AS_NODE: '1',
+        CONFIG_PATH: CONFIG_PATH,
+      },
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+    });
+  } catch (error) {
+    console.error('Erro ao iniciar agent:', error);
+    if (mainWindow) {
+      mainWindow.webContents.send('agent-error', `Erro ao iniciar agent: ${error.message}`);
+    }
+    return;
+  }
 
   agentRunning = true;
   updateTrayMenu();
@@ -190,6 +235,18 @@ function startAgent() {
   agentProcess.on('message', (message) => {
     if (message.type === 'circuit-breaker-status' && mainWindow) {
       mainWindow.webContents.send('circuit-breaker-status', message.data);
+    }
+  });
+
+  agentProcess.on('error', (error) => {
+    console.error('Erro no processo agent:', error);
+    agentRunning = false;
+    agentProcess = null;
+    updateTrayMenu();
+    
+    if (mainWindow) {
+      mainWindow.webContents.send('agent-status', { running: false });
+      mainWindow.webContents.send('agent-error', `Erro no agent: ${error.message}`);
     }
   });
 
@@ -320,7 +377,10 @@ ipcMain.handle('get-agent-status', () => {
   return { running: agentRunning };
 });
 
-const PRINTERS_PATH = path.join(__dirname, 'agent', 'printers.json');
+// Determinar caminho do printers.json baseado se está empacotado
+const PRINTERS_PATH = app.isPackaged 
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'agent', 'printers.json')
+  : path.join(__dirname, 'agent', 'printers.json');
 
 ipcMain.handle('load-printers', async () => {
   try {

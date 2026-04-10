@@ -1,0 +1,30 @@
+{
+  "appId": "com.cacimboprint.agent",
+  "productName": "Cacimbo Print Agent",
+  "compression": "maximum",
+  "asar": true,
+  "win": {
+    "target": "nsis",
+    "verifyUpdateCodeSignature": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Cacimbo Print Agent"
+  },
+  "files": [
+    "main.js",
+    "preload.js",
+    "renderer/**/*",
+    "agent/**/*",
+    "!agent/**/*.test.js",
+    "!agent/**/*.spec.js",
+    "package.json"
+  ],
+  "asarUnpack": [
+    "agent/**/*",
+    "node_modules/**/*"
+  ]
+}

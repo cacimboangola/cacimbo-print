@@ -37,6 +37,11 @@ async function processJobs() {
     return;
   }
 
+  // Verificar se há impressoras configuradas
+  if (!config.printers || config.printers.length === 0) {
+    return;
+  }
+
   isProcessing = true;
 
   try {
@@ -130,6 +135,15 @@ async function start() {
   logger.info('========================================');
   logger.info(`API URL: ${config.api.url}`);
   logger.info(`Impressoras configuradas: ${config.printers.length}`);
+  
+  if (config.printers.length === 0) {
+    logger.warn('⚠️  NENHUMA IMPRESSORA CONFIGURADA!');
+    logger.warn('   Configure as impressoras através da interface para começar a processar jobs.');
+    logger.info('   O agente ficará em standby até que impressoras sejam configuradas.');
+    logger.info('========================================');
+    return;
+  }
+  
   config.printers.forEach((p, index) => {
     logger.info(`  ${index + 1}. ${p.name} (${p.id}) - ${p.interface}`);
   });

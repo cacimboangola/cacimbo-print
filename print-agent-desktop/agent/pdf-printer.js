@@ -6,6 +6,26 @@ const logger = require('./logger');
 const config = require('./config');
 const { retryWithBackoff } = require('./retry-util');
 
+// Configurar caminho correto do SumatraPDF quando empacotado
+if (process.env.ELECTRON_RUN_AS_NODE === '1') {
+  const isPackaged = process.resourcesPath && process.resourcesPath.includes('app.asar');
+  
+  if (isPackaged) {
+    // Caminho correto quando empacotado
+    const sumatraPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'pdf-to-printer', 'dist');
+    
+    // Verificar se o SumatraPDF existe no caminho correto
+    const sumatraExe = path.join(sumatraPath, 'SumatraPDF-3.4.6-32.exe');
+    if (fs.existsSync(sumatraExe)) {
+      logger.info(`SumatraPDF encontrado em: ${sumatraExe}`);
+      // Configurar variável de ambiente para o pdf-to-printer
+      process.env.SUMATRA_PATH = sumatraPath;
+    } else {
+      logger.warn(`SumatraPDF não encontrado em: ${sumatraExe}`);
+    }
+  }
+}
+
 /**
  * Imprime um arquivo PDF usando o sistema nativo do Windows.
  * @param {string} pdfPath - Caminho absoluto do arquivo PDF
@@ -31,6 +51,15 @@ async function printPDF(pdfPath, printerInterface = null) {
         logger.info(`Imprimindo PDF na impressora: ${printerName}`);
       } else {
         logger.info('Imprimindo PDF na impressora padrão do Windows');
+      }
+
+      // Configurar caminho do SumatraPDF quando empacotado
+      if (process.env.ELECTRON_RUN_AS_NODE === '1' && process.resourcesPath) {
+        const sumatraPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'pdf-to-printer', 'dist', 'SumatraPDF-3.4.6-32.exe');
+        if (fs.existsSync(sumatraPath)) {
+          printOptions.sumatraPdfPath = sumatraPath;
+          logger.info(`Usando SumatraPDF em: ${sumatraPath}`);
+        }
       }
 
       await print(pdfPath, printOptions);

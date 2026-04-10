@@ -8,7 +8,9 @@
     "dev": "electron . --dev",
     "build": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64",
     "build:dir": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win --x64 --dir",
+    "build:portable": "set CSC_IDENTITY_AUTO_DISCOVERY=false && electron-builder --win portable",
     "package": "electron-packager . \"Cacimbo Print Agent\" --platform=win32 --arch=x64 --out=dist --overwrite --asar",
+    "clean": "rimraf dist build node_modules",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
@@ -32,24 +34,38 @@
   "build": {
     "appId": "com.cacimboprint.agent",
     "productName": "Cacimbo Print Agent",
+    "compression": "maximum",
+    "asar": true,
+    "icon": "build/icon.ico",
     "win": {
       "target": "nsis",
-      "sign": false
+      "icon": "build/icon.ico",
+      "sign": null,
+      "signingHashAlgorithms": []
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Cacimbo Print Agent"
+      "shortcutName": "Cacimbo Print Agent",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "differentialPackage": true
     },
     "files": [
       "main.js",
       "preload.js",
       "renderer/**/*",
       "agent/**/*",
-      "node_modules/**/*",
+      "!agent/**/*.test.js",
+      "!agent/**/*.spec.js",
       "package.json"
+    ],
+    "asarUnpack": [
+      "agent/**/*",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {

@@ -63,13 +63,13 @@ const config = {
 };
 
 if (!config.printers || config.printers.length === 0) {
-  console.error('[ERRO] Nenhuma impressora configurada. Configure printers.json ou .env');
-  process.exit(1);
+  console.warn('[AVISO] Nenhuma impressora configurada. Configure printers.json ou .env');
+  console.warn('[AVISO] O agente iniciará, mas não poderá processar jobs até que impressoras sejam configuradas.');
+} else {
+  console.log(`[CONFIG] ${config.printers.length} impressora(s) configurada(s):`);
+  config.printers.forEach(p => {
+    console.log(`  - ${p.name} (${p.id}) → ${p.interface}`);
+  });
 }
-
-console.log(`[CONFIG] ${config.printers.length} impressora(s) configurada(s):`);
-config.printers.forEach(p => {
-  console.log(`  - ${p.name} (${p.id}) → ${p.interface}`);
-});
 
 module.exports = config;
